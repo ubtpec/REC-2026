@@ -7,7 +7,9 @@
 #define BTN_START 22
 #define BTN_POWER 23
 #define BTN_ESTOP 24
-#define SW_LEFT 25
+#define BTN_RESET 25
+#define BTN_STOP 26
+#define SW_POT A0
 #define INITIAL_SPEED 0
 #define MAX_SPEED 255
 #define MTR true
@@ -43,8 +45,20 @@ void loop() {
   
   if(estopActive != true){
     if(digitalRead(BTN_START) == LOW){
-      if(digitalRead(SW_LEFT) == HIGH){
-        motion(motor,MAX_SPEED);
+      if(digitalRead(BTN_RESET) == HIGH){
+        if(digitalRead(BTN_STOP) == HIGH){
+          motion(motor,MAX_SPEED);
+        }else{
+          Serial.println(analogRead(SW_POT));
+          if(analogRead(SW_POT) <= 2){
+            motion(motor,50);
+          }
+          else if(analogRead(SW_POT) >= 3 && analogRead(SW_POT) <= 50){
+            motion(motor,analogRead(SW_POT)*2+50);
+          }else if(analogRead(SW_POT) >= 51){
+            motion(motor,analogRead(SW_POT)+100);
+          }
+        }
       }else{
         motion(actuator,MAX_SPEED,true);
       }
@@ -161,9 +175,11 @@ void setupPins() {
   pinMode(BTN_START, INPUT_PULLUP);
   pinMode(BTN_POWER, INPUT_PULLUP);
   pinMode(BTN_ESTOP, INPUT_PULLUP);
-  pinMode(SW_LEFT, INPUT_PULLUP);
+  pinMode(BTN_RESET, INPUT_PULLUP);
+  pinMode(BTN_STOP, INPUT_PULLUP);
 
   // Motor Actuator pins
+  pinMode(SW_POT, OUTPUT);
   pinMode(PWM_MOTOR, OUTPUT);
   pinMode(PWM_ACTUATOR, OUTPUT);
   pinMode(POS_MOTOR, OUTPUT);
