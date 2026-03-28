@@ -45,23 +45,26 @@ void loop() {
   
   if(estopActive != true){
     if(digitalRead(BTN_START) == LOW){
-      if(digitalRead(BTN_RESET) == HIGH){
-        if(digitalRead(BTN_STOP) == HIGH){
-          motion(motor,MAX_SPEED);
-        }else{
-          Serial.println(analogRead(SW_POT));
-          if(analogRead(SW_POT) <= 2){
-            motion(motor,50);
-          }
-          else if(analogRead(SW_POT) >= 3 && analogRead(SW_POT) <= 50){
-            motion(motor,analogRead(SW_POT)*2+50);
-          }else if(analogRead(SW_POT) >= 51){
-            motion(motor,analogRead(SW_POT)+100);
-          }
-        }
-      }else{
-        motion(actuator,MAX_SPEED,true);
-      }
+      rideCycle();
+      delay(8000);
+      // MAINTENANCE MODE
+      // if(digitalRead(BTN_RESET) == HIGH){
+      //   if(digitalRead(BTN_STOP) == HIGH){
+      //     motion(motor,MAX_SPEED);
+      //   }else{
+      //     Serial.println(analogRead(SW_POT));
+      //     if(analogRead(SW_POT) <= 2){
+      //       motion(motor,50);
+      //     }
+      //     else if(analogRead(SW_POT) >= 3 && analogRead(SW_POT) <= 50){
+      //       motion(motor,analogRead(SW_POT)*2+50);
+      //     }else if(analogRead(SW_POT) >= 51){
+      //       motion(motor,analogRead(SW_POT)+100);
+      //     }
+      //   }
+      // }else{
+      //   motion(actuator,MAX_SPEED,true);
+      // }
     }
   }else{
     checkEstopButton();
@@ -116,6 +119,29 @@ void checkEstopButton() {
   lastEstopButtonState = currentEstopState;
 }
 
+void rideCycle(){
+  setSpeed(100,motor);
+      digitalWrite(motor.pos, LOW);
+    digitalWrite(motor.neg, HIGH);
+  for(int i = 0; i < 50; i++){
+    setSpeed(80+i*2,motor);
+    delay(100);
+  }
+  setSpeed(MAX_SPEED,actuator);
+  setActuatorDirection(true);
+  setSpeed(255,motor);
+  delay(35000);
+  setSpeed(MAX_SPEED,actuator);
+  setActuatorDirection(false);
+    for(int i = 255; i > 40; i-=4){
+    setSpeed(i,motor);
+    delay(80);
+  }
+  stop(motor);
+  stop(actuator);
+  delay(16000);
+  rideCycle();
+}
 
 void motion(Movement obj, int speed, bool dir){
   if(obj.pwm == PWM_ACTUATOR){
